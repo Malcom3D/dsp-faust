@@ -1,5 +1,4 @@
-#define DUMMY_DRIVER 1
-#define BUILD 1
+#define ALSA_DRIVER 1
 #define DYNAMIC_DSP 1
 /* ------------------------------------------------------------
 name: "dummy"
