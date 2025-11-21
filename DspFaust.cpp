@@ -27787,22 +27787,22 @@ void DspFaust::setGate(bool state) {
 
 float* DspFaust::renderOfflineMono(int numFrames, int bitDepth) {
     if (numFrames <= 0) return nullptr;
-    
+
     // Create buffer for mono output
     float* output = new float[numFrames];
-    
+
     // Temporary buffers for compute
-    float* inputs[0] = {}; // No inputs for this DSP
-    float* outputs[2] = {new float[numFrames], new float[numFrames]}; // Stereo buffers
-    
-    // Render audio
+    float* inputs[0] = {}; // No inputs
+    float* outputs[2] = {new float[1], new float[1]}; // Single sample buffers
+
+    // Render audio frame by frame
     for (int frame = 0; frame < numFrames; frame++) {
-        compute(1, inputs, outputs); // Process one frame
-        
+        compute(1, inputs, outputs); // Process one sample
+
         // Convert stereo to mono (average)
         output[frame] = (outputs[0][0] + outputs[1][0]) * 0.5f;
     }
-    
+
     // Apply bit depth conversion if needed
     if (bitDepth < 32) {
         float scale = 1.0f;
@@ -27812,17 +27812,17 @@ float* DspFaust::renderOfflineMono(int numFrames, int bitDepth) {
             case 8: scale = 127.0f; break;
             default: scale = 32767.0f; // Default to 16-bit
         }
-        
+
         for (int i = 0; i < numFrames; i++) {
             // Quantize to target bit depth
             output[i] = std::round(output[i] * scale) / scale;
         }
     }
-    
+
     // Clean up
     delete[] outputs[0];
     delete[] outputs[1];
-    
+
     return output;
 }
 
