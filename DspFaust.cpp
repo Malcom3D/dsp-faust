@@ -1,7 +1,8 @@
 #define ALSA_DRIVER 1
 #define DYNAMIC_DSP 1
+#define SOUNDFILE 1
 /* ------------------------------------------------------------
-name: "dummy"
+name: "modal_dummy"
 Code generated with Faust 2.54.9 (https://faust.grame.fr)
 Compilation options: -a api/DspFaust.cpp -lang cpp -i -es 1 -mcd 16 -single -ftz 0
 ------------------------------------------------------------ */
@@ -36,7 +37,6 @@ Compilation options: -a api/DspFaust.cpp -lang cpp -i -es 1 -mcd 16 -single -ftz
  ************************************************************************
  ************************************************************************/
 
-#include <iostream>
 #include <cmath>
 #include <cstring>
 #include <string.h>
@@ -5184,8 +5184,8 @@ class mydsp : public dsp {
 	
 	void metadata(Meta* m) { 
 		m->declare("compile_options", "-a api/DspFaust.cpp -lang cpp -i -es 1 -mcd 16 -single -ftz 0");
-		m->declare("filename", "dummy.dsp");
-		m->declare("name", "dummy");
+		m->declare("filename", "modal_dummy.dsp");
+		m->declare("name", "modal_dummy");
 	}
 
 	virtual int getNumInputs() {
@@ -5227,7 +5227,7 @@ class mydsp : public dsp {
 	}
 	
 	virtual void buildUserInterface(UI* ui_interface) {
-		ui_interface->openVerticalBox("dummy");
+		ui_interface->openVerticalBox("modal_dummy");
 		ui_interface->closeBox();
 	}
 	
@@ -27332,9 +27332,6 @@ LIBFAUST_API void registerForeignFunction(const std::string& function_name);
 #endif
 
 #include "DspFaust.h"
-#include <vector>
-#include <cmath>
-#include <cstring>
 
 std::list<GUI*> GUI::fGuiList;
 ztimedmap GUI::gTimedZoneMap;
@@ -27768,64 +27765,6 @@ int DspFaust::getScreenColor()
 {
     return fPolyEngine->getScreenColor();
 }
-
-void DspFaust::triggerGate() {
-    // This will trigger the gate button in your Faust code
-    propagateMidi(0, 0, 0x90, 0, 60, 100); // Send note on
-    propagateMidi(0, 0, 0x80, 0, 60, 0);   // Send note off immediately
-}
-
-void DspFaust::setGate(bool state) {
-    if (state) {
-        // Turn gate on
-        propagateMidi(0, 0, 0x90, 0, 60, 100);
-    } else {
-        // Turn gate off  
-        propagateMidi(0, 0, 0x80, 0, 60, 0);
-    }
-}
-
-float* DspFaust::renderOfflineMono(int numFrames, int bitDepth) {
-    if (numFrames <= 0) return nullptr;
-
-    // Create buffer for mono output
-    float* output = new float[numFrames];
-
-    // Temporary buffers for compute
-    float* inputs[0] = {}; // No inputs
-    float* outputs[2] = {new float[1], new float[1]}; // Single sample buffers
-
-    // Render audio frame by frame
-    for (int frame = 0; frame < numFrames; frame++) {
-        compute(1, inputs, outputs); // Process one sample
-
-        // Convert stereo to mono (average)
-        output[frame] = (outputs[0][0] + outputs[1][0]) * 0.5f;
-    }
-
-    // Apply bit depth conversion if needed
-    if (bitDepth < 32) {
-        float scale = 1.0f;
-        switch (bitDepth) {
-            case 16: scale = 32767.0f; break;
-            case 24: scale = 8388607.0f; break;
-            case 8: scale = 127.0f; break;
-            default: scale = 32767.0f; // Default to 16-bit
-        }
-
-        for (int i = 0; i < numFrames; i++) {
-            // Quantize to target bit depth
-            output[i] = std::round(output[i] * scale) / scale;
-        }
-    }
-
-    // Clean up
-    delete[] outputs[0];
-    delete[] outputs[1];
-
-    return output;
-}
-
 
 #ifdef BUILD
 #include <unistd.h>
