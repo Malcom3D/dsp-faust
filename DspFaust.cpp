@@ -36,6 +36,7 @@ Compilation options: -a api/DspFaust.cpp -lang cpp -i -es 1 -mcd 16 -single -ftz
  ************************************************************************
  ************************************************************************/
 
+#include <iostream>
 #include <cmath>
 #include <cstring>
 #include <string.h>
@@ -27331,6 +27332,9 @@ LIBFAUST_API void registerForeignFunction(const std::string& function_name);
 #endif
 
 #include "DspFaust.h"
+#include <vector>
+#include <cmath>
+#include <cstring>
 
 std::list<GUI*> GUI::fGuiList;
 ztimedmap GUI::gTimedZoneMap;
@@ -27764,6 +27768,64 @@ int DspFaust::getScreenColor()
 {
     return fPolyEngine->getScreenColor();
 }
+
+void DspFaust::triggerGate() {
+    // This will trigger the gate button in your Faust code
+    propagateMidi(0, 0, 0x90, 0, 60, 100); // Send note on
+    propagateMidi(0, 0, 0x80, 0, 60, 0);   // Send note off immediately
+}
+
+void DspFaust::setGate(bool state) {
+    if (state) {
+        // Turn gate on
+        propagateMidi(0, 0, 0x90, 0, 60, 100);
+    } else {
+        // Turn gate off  
+        propagateMidi(0, 0, 0x80, 0, 60, 0);
+    }
+}
+
+float* DspFaust::renderOfflineMono(int numFrames, int bitDepth) {
+    if (numFrames <= 0) return nullptr;
+    
+    // Create buffer for mono output
+    float* output = new float[numFrames];
+    
+    // Temporary buffers for compute
+    float* inputs[0] = {}; // No inputs for this DSP
+    float* outputs[2] = {new float[numFrames], new float[numFrames]}; // Stereo buffers
+    
+    // Render audio
+    for (int frame = 0; frame < numFrames; frame++) {
+        compute(1, inputs, outputs); // Process one frame
+        
+        // Convert stereo to mono (average)
+        output[frame] = (outputs[0][0] + outputs[1][0]) * 0.5f;
+    }
+    
+    // Apply bit depth conversion if needed
+    if (bitDepth < 32) {
+        float scale = 1.0f;
+        switch (bitDepth) {
+            case 16: scale = 32767.0f; break;
+            case 24: scale = 8388607.0f; break;
+            case 8: scale = 127.0f; break;
+            default: scale = 32767.0f; // Default to 16-bit
+        }
+        
+        for (int i = 0; i < numFrames; i++) {
+            // Quantize to target bit depth
+            output[i] = std::round(output[i] * scale) / scale;
+        }
+    }
+    
+    // Clean up
+    delete[] outputs[0];
+    delete[] outputs[1];
+    
+    return output;
+}
+
 
 #ifdef BUILD
 #include <unistd.h>

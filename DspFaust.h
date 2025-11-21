@@ -506,6 +506,15 @@ class DspFaust
         // otherwise return 0x00RRGGBB a ready to use color
         //-----------------------------------------
         int getScreenColor();
+
+        //---------`float renderOfflineMono(int numFrames, int bitDepth)`---------------
+        // Offline rendering methods
+        //
+        //-----------------------------------------
+        float* renderOfflineMono(int numFrames, int bitDepth = 16);
+        void triggerGate();
+        void setGate(bool state);
+
 };
 
 #endif
