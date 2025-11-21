@@ -1,6 +1,5 @@
 #define ALSA_DRIVER 1
 #define DYNAMIC_DSP 1
-#define SOUNDFILE 1
 /* ------------------------------------------------------------
 name: "modal_dummy"
 Code generated with Faust 2.54.9 (https://faust.grame.fr)
@@ -16042,6 +16041,7 @@ class oboeaudio : public audio, public oboe::AudioStreamCallback {
 #include <algorithm>
 
 #include <alsa/asoundlib.h>
+#include <iostream>
 
 /**
 DEFAULT ALSA PARAMETERS CONTROLLED BY ENVIRONMENT VARIABLES
